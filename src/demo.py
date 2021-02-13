@@ -45,11 +45,12 @@ def demo(opt):
   out = None
   out_name = opt.demo[opt.demo.rfind('/') + 1:]
   print('out_name', out_name)
+  if not os.path.exists('../results'):
+    os.mkdir('../results')
   if opt.save_video:
-    # fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    fourcc = cv2.VideoWriter_fourcc(*'H264')
-    out = cv2.VideoWriter('../results/{}.mp4'.format(
-      opt.exp_id + '_' + out_name),fourcc, opt.save_framerate, (
+    fourcc = cv2.VideoWriter_fourcc(*'MPEG')
+    out = cv2.VideoWriter('../results/{}.avi'.format(
+      opt.exp_id + '_' + out_name[:-4]),fourcc, opt.save_framerate, (
         opt.video_w, opt.video_h))
   
   if opt.debug < 5:
@@ -125,4 +126,6 @@ def _to_list(results):
 
 if __name__ == '__main__':
   opt = opts().init()
+  opt.video_h = 720
+  opt.video_w = 1280
   demo(opt)
