@@ -11,6 +11,7 @@ import json
 import copy
 import numpy as np
 from opts import opts
+from action_detection import ActionDetection
 from detector import Detector
 
 
@@ -22,6 +23,12 @@ def demo(opt):
   os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpus_str
   opt.debug = max(opt.debug, 1)
   detector = Detector(opt)
+
+  org = (50, 100) 
+  font = cv2.FONT_HERSHEY_SIMPLEX
+  fontScale = 1
+  color = (255, 0, 0) 
+  thickness = 2
 
   if opt.demo == 'webcam' or \
     opt.demo[opt.demo.rfind('.') + 1:].lower() in video_ext:
@@ -57,6 +64,9 @@ def demo(opt):
     detector.pause = False
   cnt = 0
   results = {}
+  det_hist = {}
+
+  ad = ActionDetection(opt)
 
   while True:
       if is_video:
@@ -87,11 +97,26 @@ def demo(opt):
       time_str = 'frame {} |'.format(cnt)
       for stat in time_stats:
         time_str = time_str + '{} {:.3f}s |'.format(stat, ret[stat])
-      print(time_str)
+      # print(time_str)
 
       # results[cnt] is a list of dicts:
       #  [{'bbox': [x1, y1, x2, y2], 'tracking_id': id, 'category_id': c, ...}]
       results[cnt] = ret['results']
+
+      for res in ret['results']:
+        if res['score'] > opt.vis_thresh:
+            if 'active' in res and res['active'] == 0:
+                continue
+            if res['tracking_id'] in det_hist:
+              det_hist[res['tracking_id']] = np.append(det_hist[res['tracking_id']], res['ct'].reshape(1,2), axis = 0)
+            else:
+              det_hist[res['tracking_id']] = np.array(res['ct'].reshape(1, 2))
+
+      out_strings = ad.detect_action(cnt, ret['results'], det_hist)
+
+      for ind, st in enumerate(out_strings):
+        ret['generic'] = cv2.putText(ret['generic'], st, (org[0], org[1] + ind*50), font,  
+                   fontScale, color, thickness, cv2.LINE_AA)
 
       # save debug image to video
       if opt.save_video:
@@ -99,6 +124,10 @@ def demo(opt):
         if not is_video:
           cv2.imwrite('../results/demo{}.jpg'.format(cnt), ret['generic'])
       
+      # if cnt > 100:
+      #   save_and_exit(opt, out, results, out_name)
+      #   return         
+
       # esc to quit and finish saving video
       if cv2.waitKey(1) == 27:
         save_and_exit(opt, out, results, out_name)
@@ -128,4 +157,6 @@ if __name__ == '__main__':
   opt = opts().init()
   opt.video_h = 720
   opt.video_w = 1280
+  opt.max_age = 5
+  opt.save_framerate = 10
   demo(opt)
