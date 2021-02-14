@@ -64,7 +64,7 @@ class opts(object):
     self.parser.add_argument('--save_img_suffix', default='', help='')
     self.parser.add_argument('--skip_first', type=int, default=-1, help='')
     self.parser.add_argument('--save_video', action='store_true')
-    self.parser.add_argument('--save_framerate', type=int, default=30)
+    self.parser.add_argument('--save_framerate', type=int, default=10)
     self.parser.add_argument('--resize_video', action='store_true')
     self.parser.add_argument('--video_h', type=int, default=512, help='')
     self.parser.add_argument('--video_w', type=int, default=512, help='')
