@@ -37,10 +37,14 @@ class ActionDetection():
                 stat_std = np.std(hist_pts[:-30], axis=0)[1]
                 action_text = "id : " + str(results[ind]['tracking_id'])
                 hps = np.array(results[ind]['hps'], dtype=np.int32).reshape(-1, 2)
-                if hps[self.kti["left_wrist"], 1] < hps[self.kti["left_elbow"], 1] < hps[self.kti["left_shoulder"], 1] and stat_std > 10:
-                    out_strings.append(action_text + " Left arm Bowling detected" + str(stat_std))
-                elif hps[self.kti["right_wrist"], 1] < hps[self.kti["right_elbow"], 1] < hps[self.kti["right_shoulder"], 1] and stat_std > 10:
-                    out_strings.append(action_text + " Right arm Bowling detected" + str(stat_std)) 
+                abs_ls_le = abs(hps[self.kti["left_ear"], 1] - hps[self.kti["left_shoulder"], 1])
+                abs_rs_re = abs(hps[self.kti["right_ear"], 1] - hps[self.kti["right_shoulder"], 1])
+                if ( res['tracking_id'] == 3):
+                    print(cnt, hps[self.kti["left_wrist"], 1], hps[self.kti["left_elbow"], 1], hps[self.kti["left_shoulder"], 1], " abs dist : ", abs_ls_le)
+                if hps[self.kti["left_wrist"], 1] < hps[self.kti["left_elbow"], 1] < hps[self.kti["left_shoulder"], 1] and stat_std > 10 and abs_ls_le < 5:
+                    out_strings.append(action_text + " Left arm Bowling detected" + str(stat_std) + " abs dis: " + str(abs_ls_le))
+                if hps[self.kti["right_wrist"], 1] < hps[self.kti["right_elbow"], 1] < hps[self.kti["right_shoulder"], 1] and stat_std > 10 and abs_rs_re < 5:
+                    out_strings.append(action_text + " Right arm Bowling detected" + str(stat_std) + " abs dist : " + str(abs_rs_re)) 
                 else:
                     out_strings.append(action_text + " idle")
 
