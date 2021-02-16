@@ -13,6 +13,7 @@ import numpy as np
 from opts import opts
 from action_detection import ActionDetection
 from detector import Detector
+from vidgear.gears import CamGear
 
 
 image_ext = ['jpg', 'jpeg', 'png', 'webp']
@@ -35,6 +36,9 @@ def demo(opt):
     is_video = True
     # demo on video stream
     cam = cv2.VideoCapture(0 if opt.demo == 'webcam' else opt.demo)
+  elif 'http' in opt.demo:
+    is_video = True
+    cam = CamGear(source=opt.demo, stream_mode = True, logging=True).start() 
   else:
     is_video = False
     # Demo on images sequences
