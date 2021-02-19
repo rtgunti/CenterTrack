@@ -75,13 +75,15 @@ def demo(opt):
 
   ad = ActionDetection(opt)
   bowling_df = pd.DataFrame(columns = action_col_names)
+  flag_dup_det = False
+  first_det_cnt = 0
+
   while True:
       if is_video:
         if 'http' in opt.demo:
           img = cam.read()
         else:
           _, img = cam.read()
-          print(img.shape)
         if img is None:
           bowling_df.to_pickle('/content/drive/MyDrive/cric_actions/results/results.df')
           save_and_exit(opt, out, results, out_name)
@@ -125,20 +127,23 @@ def demo(opt):
               det_hist[res['tracking_id']] = np.array(res['ct'].reshape(1, 2))
 
       out_strings, bowling_df_frame = ad.detect_action(cnt, ret['results'], det_hist)
-
+      print("[Frame : "+ str(cnt) + "]")
       for ind, st in enumerate(out_strings):
         ret['generic'] = cv2.putText(ret['generic'], st, (org[0], org[1] + ind*50), font,  
                    fontScale, color, thickness, cv2.LINE_AA)
 
-      if bowling_df_frame:
-        print("bowling_df_frame", bowling_df.shape)
+      if cnt > first_det_cnt + 50:
+        flag_dup_det = False
+
+      if bowling_df_frame and not flag_dup_det:
+        print(out_strings)
         cv2.imwrite('/content/drive/MyDrive/cric_actions/results/demo{}.jpg'.format(cnt), ret['generic'])
         bowling_df.loc[len(bowling_df)] = bowling_df_frame
-        print("bowling_df_frame", bowling_df.shape)
-        print(cnt, bowling_df.shape)
+        first_det_cnt = cnt
+        flag_dup_det = False
       # save debug image to video
       if opt.save_video:
-        out.write(ret['generic'])
+        # out.write(ret['generic'])
         if not is_video:
           cv2.imwrite('../results/demo{}.jpg'.format(cnt), ret['generic'])
       

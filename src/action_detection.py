@@ -51,16 +51,17 @@ class ActionDetection():
                 #     out_strings.append(action_text + " Left arm Bowling detected" + str(stat_std) + " abs dis: " + str(abs_ls_le))
                 # if hps[self.kti["right_wrist"], 1] < hps[self.kti["right_elbow"], 1] < hps[self.kti["right_shoulder"], 1] and stat_std > 10 and abs_rs_re < 5:
                 #     out_strings.append(action_text + " Right arm Bowling detected" + str(stat_std) + " abs dist : " + str(abs_rs_re))
-                # if res['tracking_id'] in [3] and (260 < cnt < 280 or 1190 < cnt < 1210) :
-                #     print(res['tracking_id'], res['bbox'], "std", std)
-                if 300 < foot_point[1] < 310 and std[1] > 10 and (action_lb or action_rb):
+                # if res['tracking_id'] in [3] and 60 < cnt < 100:
+                #     print(res['bbox'])
+                #     print(res['tracking_id'], foot_point[1], "std", std)
+                #     print(hps[self.kti["left_wrist"], 1], hps[self.kti["left_elbow"], 1], hps[self.kti["left_shoulder"], 1])
+                if 290 < foot_point[1] < 310 and std[1] > 10 and (action_lb or action_rb): # 304
                     out_strings.append(action_text + " Bowling from top")
                     bowling_df_frame = [cnt, str(datetime.timedelta(seconds = int(cnt/30))), res['bbox'], res['hps'], res['tracking_id'], 'top']
-                if 483 < foot_point[1] < 492 and std[1] > 10 and (action_lb or action_rb):
+                elif 483 < foot_point[1] < 492 and std[1] > 10 and (action_lb or action_rb): # 488
                     out_strings.append(action_text + " Bowling from bottom")
                     bowling_df_frame = [cnt, str(datetime.timedelta(seconds = int(cnt/30))), res['bbox'], res['hps'], res['tracking_id'], 'bottom']
                 else:
                     out_strings.append(action_text + " idle")
 
-        print(out_strings)
         return out_strings, bowling_df_frame
