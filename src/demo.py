@@ -10,6 +10,7 @@ import cv2
 import json
 import copy
 import numpy as np
+import pandas as pd
 from opts import opts
 from action_detection import ActionDetection
 from detector import Detector
@@ -19,6 +20,8 @@ from vidgear.gears import CamGear
 image_ext = ['jpg', 'jpeg', 'png', 'webp']
 video_ext = ['mp4', 'mov', 'avi', 'mkv']
 time_stats = ['tot', 'load', 'pre', 'net', 'dec', 'post', 'merge', 'display']
+action_col_names = ['frame_cnt', 'timestamp', 'bbox', 'hpe', 'tracking_id', 'direction']  #hpe to be normalized using bbox
+
 
 def demo(opt):
   os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpus_str
@@ -71,11 +74,16 @@ def demo(opt):
   det_hist = {}
 
   ad = ActionDetection(opt)
-
+  bowling_df = pd.DataFrame(columns = action_col_names)
   while True:
       if is_video:
-        _, img = cam.read()
+        if 'http' in opt.demo:
+          img = cam.read()
+        else:
+          _, img = cam.read()
+          print(img.shape)
         if img is None:
+          bowling_df.to_pickle('/content/drive/MyDrive/cric_actions/results/results.df')
           save_and_exit(opt, out, results, out_name)
       else:
         if cnt < len(image_names):
@@ -116,26 +124,36 @@ def demo(opt):
             else:
               det_hist[res['tracking_id']] = np.array(res['ct'].reshape(1, 2))
 
-      out_strings = ad.detect_action(cnt, ret['results'], det_hist)
+      out_strings, bowling_df_frame = ad.detect_action(cnt, ret['results'], det_hist)
 
       for ind, st in enumerate(out_strings):
         ret['generic'] = cv2.putText(ret['generic'], st, (org[0], org[1] + ind*50), font,  
                    fontScale, color, thickness, cv2.LINE_AA)
 
+      if bowling_df_frame:
+        print("bowling_df_frame", bowling_df.shape)
+        cv2.imwrite('/content/drive/MyDrive/cric_actions/results/demo{}.jpg'.format(cnt), ret['generic'])
+        bowling_df.loc[len(bowling_df)] = bowling_df_frame
+        print("bowling_df_frame", bowling_df.shape)
+        print(cnt, bowling_df.shape)
       # save debug image to video
       if opt.save_video:
         out.write(ret['generic'])
         if not is_video:
           cv2.imwrite('../results/demo{}.jpg'.format(cnt), ret['generic'])
       
-      # if cnt > 100:
+      # if cnt > 150:
       #   save_and_exit(opt, out, results, out_name)
-      #   return         
+      #   return 
+
+      if cnt%1000 == 0:
+        bowling_df.to_pickle('/content/drive/MyDrive/cric_actions/results/results.df')
 
       # esc to quit and finish saving video
       if cv2.waitKey(1) == 27:
         save_and_exit(opt, out, results, out_name)
         return 
+  
   save_and_exit(opt, out, results)
 
 
