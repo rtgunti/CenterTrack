@@ -254,6 +254,13 @@ class opts(object):
     self.parser.add_argument('--custom_dataset_img_path', default='')
     self.parser.add_argument('--custom_dataset_ann_path', default='')
 
+    # cric_actions
+    self.parser.add_argument('--start_time', default = '00:00:00')
+    self.parser.add_argument('--end_time', default = '00:00:00')
+    self.parser.add_argument('--start_frame', default = 0)
+    self.parser.add_argument('--end_frame', default = -1)
+
+
   def parse(self, args=''):
     if args == '':
       opt = self.parser.parse_args()

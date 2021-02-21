@@ -77,18 +77,18 @@ def demo(opt):
 
   ad = ActionDetection(opt)
   bowling_df = pd.DataFrame(columns = action_col_names)
-  flag_dup_det = False
-  first_det_cnt = 0
-  first_det_dict = {}
-  last_det_dict = {}
-  dup_flag = {}
+  
+  last_det_cnt = {}
+  flag_dup_det = {}
   if opt.start_time and not opt.start_frame:
     opt.start_frame = timecode_to_frames(opt.start_time)
     opt.end_frame = timecode_to_frames(opt.end_time)
-    cam.set(cv2.CAP_PROP_POS_FRAMES, opt.start_frame)
   
-  print("Frame range", opt.start_frame, opt.end_frame)
+  cam.set(cv2.CAP_PROP_POS_FRAMES, opt.start_frame)
   cnt = opt.start_frame
+  if opt.end_frame == -1:
+    opt.end_frame = int(cam.get(cv2.CAP_PROP_FRAME_COUNT))
+  print("Frame range", opt.start_frame, opt.end_frame)
   ex_start_time = time.time()
   while True:
       if is_video:
@@ -145,17 +145,23 @@ def demo(opt):
         ret['generic'] = cv2.putText(ret['generic'], st, (org[0], org[1] + ind*50), font,  
                    fontScale, color, thickness, cv2.LINE_AA)
 
-      last_det_dict.update({bowling_df_frame[-2]:cnt})
+      if bowling_df_frame:
+        target_id = bowling_df_frame[-2]
+        if not target_id in last_det_cnt:
+          last_det_cnt.update({target_id:cnt})
+        if not target_id in flag_dup_det:
+          flag_dup_det.update({target_id:False})
 
-      if cnt > first_det_cnt + 50:
-        flag_dup_det[bowling_df_frame[-2]] = False
+        if cnt > last_det_cnt[target_id] + 50:
+          flag_dup_det[target_id] = False
 
-      if bowling_df_frame and not flag_dup_det[bowling_df_frame[-2]]:
-        print(out_strings)
-        cv2.imwrite('/content/drive/MyDrive/cric_actions/results/demo{}.jpg'.format(cnt), ret['generic'])
-        bowling_df.loc[len(bowling_df)] = bowling_df_frame
-        first_det_cnt = cnt
-        flag_dup_det = True
+        if not flag_dup_det[target_id]:
+          print(out_strings)
+          cv2.imwrite('/content/drive/MyDrive/cric_actions/results/demo{}.jpg'.format(cnt), ret['generic'])
+          bowling_df.loc[len(bowling_df)] = bowling_df_frame
+          last_det_cnt.update({target_id:cnt})
+          flag_dup_det[target_id] = True
+
       # save debug image to video
       if opt.save_video:
         out.write(ret['generic'])
@@ -201,9 +207,9 @@ if __name__ == '__main__':
   opt.video_w = 1280
   opt.max_age = 5
   opt.save_framerate = 10
-  opt.start_time = "02:53:40"
-  opt.end_time = "02:54:00"
+  opt.start_time = "01:08:00"
+  opt.end_time = "02:05:00"
   # opt.start_frame = 1
-  # opt.end_frame = 850
+  # opt.end_frame = -1
   print("Frame range", opt.start_frame, opt.end_frame)
   demo(opt)
