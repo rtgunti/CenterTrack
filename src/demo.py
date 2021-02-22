@@ -171,12 +171,9 @@ def demo(opt):
         out.write(ret['generic'])
         if not is_video:
           cv2.imwrite('../results/demo{}.jpg'.format(cnt), ret['generic'])
-      
-      # if cnt > 150:
-      #   save_and_exit(opt, out, results, out_name)
-      #   return 
 
       if cnt%1000 == 0:
+        save_and_exit(opt, out, results, "inter" + out_name, False)
         bowling_df.to_pickle('/content/drive/MyDrive/cric_actions/results/results.df')
 
       # esc to quit and finish saving video
@@ -187,15 +184,16 @@ def demo(opt):
   save_and_exit(opt, out, results)
 
 
-def save_and_exit(opt, out=None, results=None, out_name=''):
+def save_and_exit(opt, out=None, results=None, out_name='', exit = True):
   if opt.save_results and (results is not None):
-    save_dir =  '/content/drive/MyDrive/cric_actions/results/{}_results_{}_{}.json'.format(opt.exp_id + '_' + out_name, opt.start_frame, opt.end_frame)
+    save_dir =  '/content/drive/MyDrive/cric_actions/results/{}_results_{}_{}.json'.format(opt.exp_id + '_' + out_name[:-4], opt.start_frame, opt.end_frame)
     print('saving results to', save_dir)
     json.dump(_to_list(copy.deepcopy(results)), 
               open(save_dir, 'w'))
   if opt.save_video and out is not None:
     out.release()
-  sys.exit(0)
+  if exit:
+    sys.exit(0)
 
 def _to_list(results):
   for img_id in results:
@@ -212,8 +210,8 @@ if __name__ == '__main__':
   opt.max_age = 5
   opt.save_framerate = 10
   opt.start_time = "05:31:10"
-  opt.end_time = "05:31:16"
+  opt.end_time = "07:11:43"
   # opt.start_frame = 1
-  # opt.end_frame = -1
+  # opt.end_frame = 10
   print("Frame range", opt.start_frame, opt.end_frame)
   demo(opt)
