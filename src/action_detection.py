@@ -29,9 +29,15 @@ class ActionDetection():
             }
 
     def detect_action(self, cnt, results, det_hist):
-        top_crease_x = [510, 804]
-        bottom_crease_x = [483, 846]
-        std_thresh = 15
+        # top_crease_x = [510, 804]     #Precise points
+        # bottom_crease_x = [483, 846]
+        # top_crease_y = [304]
+        # bottom_crease_y = [488]
+        top_crease_x = [500, 810]       #Add buffer
+        bottom_crease_x = [470, 860]
+        top_crease_y = [290, 310]
+        bottom_crease_y = [483, 492]
+        std_thresh = 12
         out_strings = []
         bowling_df_frame = []
         out_strings.append("Frame : " + str(cnt))
@@ -54,17 +60,20 @@ class ActionDetection():
                 #     out_strings.append(action_text + " Left arm Bowling detected" + str(stat_std) + " abs dis: " + str(abs_ls_le))
                 # if hps[self.kti["right_wrist"], 1] < hps[self.kti["right_elbow"], 1] < hps[self.kti["right_shoulder"], 1] and stat_std > 10 and abs_rs_re < 5:
                 #     out_strings.append(action_text + " Right arm Bowling detected" + str(stat_std) + " abs dist : " + str(abs_rs_re))
-                # if res['tracking_id'] in [5] and 100 < cnt < 220:
-                #     print(res['bbox'])
-                #     print(res['tracking_id'], foot_point[1], "std", std)
-                #     print(hps[self.kti["left_wrist"], 1], hps[self.kti["left_elbow"], 1], hps[self.kti["left_shoulder"], 1], action_lb or action_rb)
+                # if res['tracking_id'] in [3]:
+                #     print(res['tracking_id'], foot_point[1], "std", std, "bbox", res['bbox'])
+                #     print(hps[self.kti["left_wrist"], 1], hps[self.kti["left_elbow"], 1], hps[self.kti["left_shoulder"], 1], action_lb)
+                #     print(hps[self.kti["right_wrist"], 1], hps[self.kti["right_elbow"], 1], hps[self.kti["right_shoulder"], 1], action_rb)
                 if 290 < foot_point[1] < 310 and top_crease_x[0] < foot_point[0] < top_crease_x[1] and std[1] > std_thresh and (action_lb or action_rb): # 304
                     out_strings.append(action_text + " Bowling from top")
+                    results[ind].update({'action': 'bowl_top'})
                     bowling_df_frame = [cnt, str(datetime.timedelta(seconds = int(cnt/30))), res['bbox'], res['hps'], res['tracking_id'], 'top']
                 elif 483 < foot_point[1] < 492 and bottom_crease_x[0] < foot_point[0] < bottom_crease_x[1] and std[1] > std_thresh and (action_lb or action_rb): # 488
                     out_strings.append(action_text + " Bowling from bottom")
+                    results[ind].update({'action': 'bowl_bottom'})
                     bowling_df_frame = [cnt, str(datetime.timedelta(seconds = int(cnt/30))), res['bbox'], res['hps'], res['tracking_id'], 'bottom']
                 else:
                     out_strings.append(action_text + " idle")
+                    results[ind].update({'action': 'idle'})
 
-        return out_strings, bowling_df_frame
+        return out_strings, bowling_df_frame, results
