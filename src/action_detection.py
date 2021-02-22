@@ -39,7 +39,6 @@ class ActionDetection():
         bottom_crease_y = [483, 492]
         std_thresh = 12
         bowling_df_frame = []
-        out_strings.update({"Frame" : str(cnt)})
         for ind, res in enumerate(results):
             if results[ind]['score'] > self.opt.vis_thresh:
                 if 'active' in results[ind] and results[ind]['active'] == 0  and len(det_hist[res['tracking_id']]) < 30:
