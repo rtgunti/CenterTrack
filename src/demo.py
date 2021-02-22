@@ -98,7 +98,7 @@ def demo(opt):
           _, img = cam.read()
         if img is None or cnt > opt.end_frame:
           print("time taken to process ", cnt, "frames", time.time() - ex_start_time)
-          bowling_df.to_pickle('/content/drive/MyDrive/cric_actions/results/results.df')
+          bowling_df.to_pickle('/content/drive/MyDrive/cric_actions/results/results_df_' + opt.start_frame + '_' + opt.end_frame + '.df')
           save_and_exit(opt, out, results, out_name)
       else:
         if cnt < len(image_names):
@@ -139,7 +139,7 @@ def demo(opt):
             else:
               det_hist[res['tracking_id']] = np.array(res['ct'].reshape(1, 2))
 
-      out_strings, bowling_df_frame = ad.detect_action(cnt, ret['results'], det_hist)
+      out_strings, bowling_df_frame, results[cnt] = ad.detect_action(cnt, ret['results'], det_hist)
       print("[Frame : "+ str(cnt) + "]")
       for ind, st in enumerate(out_strings):
         ret['generic'] = cv2.putText(ret['generic'], st, (org[0], org[1] + ind*50), font,  
@@ -164,7 +164,7 @@ def demo(opt):
 
       # save debug image to video
       if opt.save_video:
-        out.write(ret['generic'])
+        # out.write(ret['generic'])
         if not is_video:
           cv2.imwrite('../results/demo{}.jpg'.format(cnt), ret['generic'])
       
@@ -185,7 +185,7 @@ def demo(opt):
 
 def save_and_exit(opt, out=None, results=None, out_name=''):
   if opt.save_results and (results is not None):
-    save_dir =  '../results/{}_results.json'.format(opt.exp_id + '_' + out_name)
+    save_dir =  '/content/drive/MyDrive/cric_actions/results/{}_results_{}_{}.json'.format(opt.exp_id + '_' + out_name, opt.start_frame, opt.end_frame)
     print('saving results to', save_dir)
     json.dump(_to_list(copy.deepcopy(results)), 
               open(save_dir, 'w'))
@@ -207,8 +207,8 @@ if __name__ == '__main__':
   opt.video_w = 1280
   opt.max_age = 5
   opt.save_framerate = 10
-  opt.start_time = "01:08:00"
-  opt.end_time = "02:05:00"
+  opt.start_time = "04:13:00"
+  opt.end_time = "05:30:00"
   # opt.start_frame = 1
   # opt.end_frame = -1
   print("Frame range", opt.start_frame, opt.end_frame)
