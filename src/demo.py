@@ -97,8 +97,8 @@ def demo(opt):
         else:
           _, img = cam.read()
         if img is None or cnt > opt.end_frame:
-          print("time taken to process ", cnt, "frames", time.time() - ex_start_time)
-          bowling_df.to_pickle('/content/drive/MyDrive/cric_actions/results/results_df_' + opt.start_frame + '_' + opt.end_frame + '.df')
+          print("time taken to process ", opt.end_frame - opt.start_frame, "frames", time.time() - ex_start_time)
+          bowling_df.to_pickle('/content/drive/MyDrive/cric_actions/results/results_df_' + str(opt.start_frame) + '_' + str(opt.end_frame) + '.df')
           save_and_exit(opt, out, results, out_name)
       else:
         if cnt < len(image_names):
@@ -139,32 +139,36 @@ def demo(opt):
             else:
               det_hist[res['tracking_id']] = np.array(res['ct'].reshape(1, 2))
 
-      out_strings, bowling_df_frame, results[cnt] = ad.detect_action(cnt, ret['results'], det_hist)
+      bowling_df_frame, results[cnt] = ad.detect_action(cnt, ret['results'], det_hist)
       print("[Frame : "+ str(cnt) + "]")
-      for ind, st in enumerate(out_strings):
-        ret['generic'] = cv2.putText(ret['generic'], st, (org[0], org[1] + ind*50), font,  
-                   fontScale, color, thickness, cv2.LINE_AA)
+      for ind, res in enumerate(results[cnt]):
+        ret['generic'] = cv2.putText(ret['generic'], str(res['tracking_id']) + " : " + res['action'], (org[0], org[1] + (ind+1)*50), font,  
+                   fontScale, color, thickness, cv2.LINE_AA)      
+      ret['generic'] = cv2.putText(ret['generic'],  "Frame : " + str(cnt), (org[0], org[1]), font,  
+                  fontScale, color, thickness, cv2.LINE_AA)   
 
       if bowling_df_frame:
-        target_id = bowling_df_frame[-2]
-        if not target_id in last_det_cnt:
-          last_det_cnt.update({target_id:cnt})
-        if not target_id in flag_dup_det:
-          flag_dup_det.update({target_id:False})
+        tracking_id = bowling_df_frame[-2]
+        if not tracking_id in last_det_cnt:
+          last_det_cnt.update({tracking_id:cnt})
+        if not tracking_id in flag_dup_det:
+          flag_dup_det.update({tracking_id:False})
 
-        if cnt > last_det_cnt[target_id] + 50:
-          flag_dup_det[target_id] = False
+        if cnt > last_det_cnt[tracking_id] + 50:
+          flag_dup_det[tracking_id] = False
 
-        if not flag_dup_det[target_id]:
-          print(out_strings)
+        if not flag_dup_det[tracking_id]:
+          print("bowling detected by ", tracking_id)
           cv2.imwrite('/content/drive/MyDrive/cric_actions/results/demo{}.jpg'.format(cnt), ret['generic'])
           bowling_df.loc[len(bowling_df)] = bowling_df_frame
-          last_det_cnt.update({target_id:cnt})
-          flag_dup_det[target_id] = True
+          last_det_cnt.update({tracking_id:cnt})
+          flag_dup_det[tracking_id] = True
+        else:
+          [results[cnt][ind].update({'action':'idle'}) for ind, res in enumerate(results[cnt]) if res['tracking_id'] == tracking_id]
 
       # save debug image to video
       if opt.save_video:
-        # out.write(ret['generic'])
+        out.write(ret['generic'])
         if not is_video:
           cv2.imwrite('../results/demo{}.jpg'.format(cnt), ret['generic'])
       
@@ -207,8 +211,8 @@ if __name__ == '__main__':
   opt.video_w = 1280
   opt.max_age = 5
   opt.save_framerate = 10
-  opt.start_time = "04:13:00"
-  opt.end_time = "05:30:00"
+  opt.start_time = "05:31:10"
+  opt.end_time = "05:31:16"
   # opt.start_frame = 1
   # opt.end_frame = -1
   print("Frame range", opt.start_frame, opt.end_frame)
